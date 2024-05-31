@@ -1,19 +1,33 @@
 import json
 import requests
-import time
 
 # Define the file paths
-input_json_path = r'C:\Users\miliBUB\OneDrive\Skrivebord\masters_thesis_spotify\filtered_playlist.json'  # Update with your actual file path
+input_json_path = r'C:\Users\miliBUB\OneDrive\Skrivebord\masters_thesis_spotify\filtered_playlist.json'  # Use raw string to avoid unicode escape error
 output_json_path = r'C:\Users\miliBUB\OneDrive\Skrivebord\masters_thesis_spotify\enriched_playlist.json'  # Use raw string to avoid unicode escape error
-token_file_path = 'access_token.json'
 
-# Function to read access token from file
-def read_access_token(token_file_path):
-    with open(token_file_path, 'r') as file:
-        return json.load(file)['access_token']
+# Spotify API credentials
+client_id = '524a50e02ddc42e08a83aafd479b6bea'  # Replace with your Client ID
+client_secret = '214cbe61711f4477b4f433a9c77b22f7'  # Replace with your Client Secret
 
-# Read the access token
-access_token = read_access_token(token_file_path)
+# Function to get access token
+def get_access_token(client_id, client_secret):
+    url = "https://accounts.spotify.com/api/token"
+    headers = {
+        "Content-Type": "application/x-www-form-urlencoded"
+    }
+    data = {
+        "grant_type": "client_credentials",
+        "client_id": client_id,
+        "client_secret": client_secret
+    }
+    response = requests.post(url, headers=headers, data=data)
+    if response.status_code == 200:
+        return response.json()["access_token"]
+    else:
+        raise Exception(f"Failed to get access token: {response.status_code} {response.text}")
+
+# Get the access token
+access_token = get_access_token(client_id, client_secret)
 
 # Read the input JSON file to get track IDs
 with open(input_json_path, 'r') as file:
@@ -34,7 +48,7 @@ base_url = 'https://api.spotify.com/v1/audio-features'
 max_ids_per_request = 100
 audio_features = []
 
-# Make API requests in batches with rate limiting
+# Make API requests in batches
 for i in range(0, len(track_ids), max_ids_per_request):
     batch_ids = track_ids[i:i + max_ids_per_request]
     ids_param = ','.join(batch_ids)
@@ -45,18 +59,6 @@ for i in range(0, len(track_ids), max_ids_per_request):
 
     if response.status_code == 200:
         audio_features.extend(response.json()['audio_features'])
-    elif response.status_code == 429:
-        print('Rate limit exceeded, sleeping for 60 seconds')
-        time.sleep(60)
-        # Retry the same batch after sleeping
-        response = requests.get(
-            f'{base_url}?ids={ids_param}',
-            headers={'Authorization': f'Bearer {access_token}'}
-        )
-        if response.status_code == 200:
-            audio_features.extend(response.json()['audio_features'])
-        else:
-            print(f'Error fetching audio features after retry: {response.status_code} {response.text}')
     else:
         print(f'Error fetching audio features: {response.status_code} {response.text}')
 
