@@ -5,8 +5,8 @@ import time
 import sys
 
 # Define the file paths
-input_json_path = r'C:\Users\miliBUB\OneDrive\Skrivebord\masters_thesis_spotify\filtered_playlist.json'  # Update with your actual file path
-output_json_path = r'C:\Users\miliBUB\OneDrive\Skrivebord\masters_thesis_spotify\enriched_playlist.json'  # Use raw string to avoid unicode escape error
+input_json_path = r'C:\\Users\\miliBUB\\OneDrive\\Skrivebord\\masters_thesis_spotify\\filtered_playlist.json'  
+output_json_path = r'C:\\Users\\miliBUB\\OneDrive\\Skrivebord\\masters_thesis_spotify\\enriched_playlist.json'  # Use raw string to avoid unicode escape error
 
 # Spotify API credentials
 client_id = '524a50e02ddc42e08a83aafd479b6bea'  # Replace with your Client ID
@@ -28,8 +28,8 @@ for playlist in data['playlists']:
         track_id = track_uri.split(':')[-1]  # Extract the track ID from the URI
         track_ids.append(track_id)
 
-# Spotify API allows up to 100 IDs per request
-max_ids_per_request = 100
+# Spotify API allows up to 100 IDs per request, set to 80 to not get 429 error
+max_ids_per_request = 80
 audio_features = []
 
 # Function to handle rate limits and retries
