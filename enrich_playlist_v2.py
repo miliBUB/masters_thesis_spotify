@@ -1,82 +1,77 @@
-from spotipy.oauth2 import SpotifyClientCredentials
 import json
-import spotipy
+import requests
 import time
-import logging
 
 # Define the file paths
 input_json_path = r'C:\\Users\\miliBUB\\OneDrive\\Skrivebord\\masters_thesis_spotify\\filtered_playlist.json'  # Update with your actual file path
 output_json_path = r'C:\\Users\\miliBUB\\OneDrive\\Skrivebord\\masters_thesis_spotify\\enriched_playlist.json'  # Use raw string to avoid unicode escape error
+token_file_path = 'access_token.json'
 
-# Spotify API credentials
-client_id = '524a50e02ddc42e08a83aafd479b6bea'  # Replace with your Client ID
-client_secret = '214cbe61711f4477b4f433a9c77b22f7'  # Replace with your Client Secret
+# Function to read access token from file
+def read_access_token(token_file_path):
+    with open(token_file_path, 'r') as file:
+        return json.load(file)['access_token']
 
-# Initialize spotipy client
-client_credentials_manager = SpotifyClientCredentials(client_id=client_id, client_secret=client_secret)
-sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
+# Function to get audio features from Spotify API
+def get_audio_features(access_token, track_ids):
+    base_url = 'https://api.spotify.com/v1/audio-features'
+    max_ids_per_request = 100
+    audio_features = []
+    headers = {'Authorization': f'Bearer {access_token}'}
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+    for i in range(0, len(track_ids), max_ids_per_request):
+        batch_ids = track_ids[i:i + max_ids_per_request]
+        ids_param = ','.join(batch_ids)
+        
+        # Add a delay to respect rate limits
+        time.sleep(1)
+        
+        response = requests.get(f'{base_url}?ids={ids_param}', headers=headers)
 
-# Read the input JSON file to get track IDs
-with open(input_json_path, 'r') as file:
-    data = json.load(file)
-
-# Extract track IDs from all playlists
-track_ids = []
-for playlist in data['playlists']:
-    for track in playlist['tracks']:
-        track_uri = track['track_uri']
-        track_id = track_uri.split(':')[-1]  # Extract the track ID from the URI
-        track_ids.append(track_id)
-
-# Spotify API allows up to 100 IDs per request, set to 15 as per the requirement
-max_ids_per_request = 15
-audio_features = []
-
-# Function to handle rate limits and retries
-def fetch_audio_features(sp, batch_ids):
-    retries = 5
-    backoff_time = 2  # Initial backoff time in seconds
-    for i in range(retries):
-        try:
-            features = sp.audio_features(batch_ids)
-            return features
-        except spotipy.exceptions.SpotifyException as e:
-            if e.http_status == 429:
-                retry_after = int(e.headers.get('Retry-After', backoff_time)) if 'Retry-After' in e.headers else backoff_time
-                logger.warning(f"Rate limit exceeded. Retrying in {retry_after} seconds...")
-                time.sleep(retry_after)
-                backoff_time = max(backoff_time * 2, retry_after)  # Exponential backoff or use Retry-After if greater
+        if response.status_code == 200:
+            audio_features.extend(response.json()['audio_features'])
+            print(f'Successfully fetched audio features for batch {i // max_ids_per_request + 1}')
+        elif response.status_code == 429:
+            retry_after = int(response.headers.get('Retry-After', 60))  # Get the retry-after value from headers
+            print(f'Rate limit exceeded, sleeping for {retry_after} seconds')
+            time.sleep(retry_after)
+            response = requests.get(f'{base_url}?ids={ids_param}', headers=headers)
+            if response.status_code == 200:
+                audio_features.extend(response.json()['audio_features'])
+                print(f'Successfully fetched audio features for batch {i // max_ids_per_request + 1} after retry')
             else:
-                logger.error(f"Error fetching audio features: {e}")
-                raise
-    logger.error(f"Max retries reached for batch_ids: {batch_ids}")
-    return []
+                print(f'Error fetching audio features after retry: {response.status_code} {response.text}')
+        else:
+            print(f'Error fetching audio features: {response.status_code} {response.text}')
 
-# Make API requests in batches with rate limiting
-for i in range(0, len(track_ids), max_ids_per_request):
-    batch_ids = track_ids[i:i + max_ids_per_request]
-    features = fetch_audio_features(sp, batch_ids)
-    audio_features.extend(features)
-    
-    # Sleep to respect rate limit
-    time.sleep(1)  # Ensure we don't exceed the rate limit of 20 requests per second
+    return audio_features
 
-# Create a dictionary of audio features for easy lookup
-audio_features_dict = {feature['id']: feature for feature in audio_features if feature}
+# Main execution
+if __name__ == "__main__":
+    access_token = read_access_token(token_file_path)
 
-# Enrich original data with audio features
-for playlist in data['playlists']:
-    for track in playlist['tracks']:
-        track_id = track['track_uri'].split(':')[-1]  # Extract the track ID from the URI
-        if track_id in audio_features_dict:
-            track['audio_features'] = audio_features_dict[track_id]
+    # Read the input JSON file to get track IDs
+    with open(input_json_path, 'r') as file:
+        data = json.load(file)
 
-# Save the enriched data to a new JSON file
-with open(output_json_path, 'w') as file:
-    json.dump(data, file, indent=2)
+    # Extract track IDs from all playlists
+    track_ids = [track['track_uri'].split(':')[-1] for playlist in data['playlists'] for track in playlist['tracks']]
 
-logger.info(f'Enriched data saved to {output_json_path}')
+    # Fetch audio features from Spotify API
+    audio_features = get_audio_features(access_token, track_ids)
+
+    # Create a dictionary of audio features for easy lookup
+    audio_features_dict = {feature['id']: feature for feature in audio_features if feature}
+
+    # Enrich original data with audio features
+    for playlist in data['playlists']:
+        for track in playlist['tracks']:
+            track_id = track['track_uri'].split(':')[-1]
+            if track_id in audio_features_dict:
+                track['audio_features'] = audio_features_dict[track_id]
+
+    # Save the enriched data to a new JSON file
+    with open(output_json_path, 'w') as file:
+        json.dump(data, file, indent=2)
+
+    print(f'Enriched data saved to {output_json_path}')
