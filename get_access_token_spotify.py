@@ -3,7 +3,7 @@ import json
 
 # Spotify API credentials
 client_id = '524a50e02ddc42e08a83aafd479b6bea'  # Replace with your Client ID
-client_secret = '214cbe61711f4477b4f433a9c77b22f7'  # Replace with your Client Secret
+client_secret = '3d8ae4ecd9f444219575bfafd7daf673'  # Replace with your Client Secret
 
 # Function to get access token
 def get_access_token(client_id, client_secret):
