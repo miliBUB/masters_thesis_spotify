@@ -1,7 +1,7 @@
 import json
 import requests
 import time
-
+import os
 # Define the file paths
 input_json_path = r'C:\\Users\\miliBUB\\OneDrive\\Skrivebord\\masters_thesis_spotify\\filtered_playlist.json'  # Update with your actual file path
 output_json_path = r'C:\\Users\\miliBUB\\OneDrive\\Skrivebord\\masters_thesis_spotify\\enriched_playlist.json'  # Use raw string to avoid unicode escape error
@@ -14,8 +14,7 @@ def read_access_token(token_file_path):
 
 # Function to get audio features from Spotify API
 
-import requests
-import time
+
 
 def get_audio_features(access_token, track_ids, output_file='audio_features.json'):
     base_url = 'https://api.spotify.com/v1/audio-features'
@@ -64,16 +63,6 @@ def get_audio_features(access_token, track_ids, output_file='audio_features.json
 # track_ids = ['track_id_1', 'track_id_2', ...]  # List of up to 80 track IDs
 # features = get_audio_features(access_token, track_ids)
 
-# Example usage
-# access_token = 'your_spotify_access_token'
-# track_ids = ['track_id_1', 'track_id_2', ...]  # List of up to 80 track IDs
-# features = get_audio_features(access_token, track_ids)
-
-
-# Example usage
-# access_token = 'your_spotify_access_token'
-# track_ids = ['track_id_1', 'track_id_2', ...]  # List of up to 80 track IDs
-# features = get_audio_features(access_token, track_ids)
 
 
 # Main execution
