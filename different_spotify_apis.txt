@@ -1,0 +1,16 @@
+My client: 
+client_id = '524a50e02ddc42e08a83aafd479b6bea'  # Replace with your Client ID
+client_secret = '3d8ae4ecd9f444219575bfafd7daf673'  # Replace with your Client Secret
+
+Jonas client: 
+client_id = '7b25f843681940719a9c900b2d57b3ca'  # Replace with your Client ID
+client_secret = '7f27e273437d4e45a65f12ce4663876c'  # Replace with your Client Secret
+
+The Train Man: 
+
+client_id = '0d2c6fb36f2244aa8c376c4a31722cb4'  # Replace with your Client ID
+client_secret = '27dd4803c1b04ac695f26e5ddb4e63cd'  # Replace with your Client Secret
+
+Bobbie: 
+client_id = '9cbf303722874efa9691e8c4a3e257bf'  # Replace with your Client ID
+client_secret = '1849e65544de4e869523a5c8c7e40d26'  # Replace with your Client Secret

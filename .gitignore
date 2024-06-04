@@ -1,3 +1,5 @@
 discarded_playlists/
 json_slices_master_dataset/
 /filtered_playlist.json
+/enriched_playlist.json
+/audio_features.json
