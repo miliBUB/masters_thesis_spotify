@@ -3,3 +3,4 @@ json_slices_master_dataset/
 /filtered_playlist.json
 /enriched_playlist.json
 /audio_features.json
+enriched_playlist_v2.csv
