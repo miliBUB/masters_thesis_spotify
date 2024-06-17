@@ -3,8 +3,3 @@ json_slices_master_dataset/
 /filtered_playlist.json
 /enriched_playlist.json
 /audio_features.json
-.ipynb_checkpoints/
-enriched_playlist_v2.csv
-filtered_playlist.json.ucloud_part
-playlists.pkl
-saved_models/
