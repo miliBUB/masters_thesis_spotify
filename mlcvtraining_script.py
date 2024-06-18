@@ -1,7 +1,7 @@
-#pip install pandas
-#pip install -U matplotlib
-#pip install seaborn
-#pip install scikit-learn
+pip install pandas
+pip install -U matplotlib
+pip install seaborn
+pip install scikit-learn
 
 
 
